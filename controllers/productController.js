@@ -19,7 +19,12 @@ export const createProduct = async (req, res) => {
       return res.status(400).json({ message: "Required fields missing!" });
     }
 
-    const images = req.files.map((f) => f.path);
+      // ✅ Image validation (at least 1 required, max 5 handled by multer)
+    if (!req.files || req.files.length < 1) {
+      return res.status(400).json({ message: "At least 1 image is required" });
+    }
+
+    const images = req.files.map((f) => `/uploads/products/${f.filename}`);
 
     const product = await Product.create({
       product_name,
@@ -34,8 +39,14 @@ export const createProduct = async (req, res) => {
       images,
     });
 
-    res.status(201).json(product);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(201).json({
+      success : true,
+      message:'Product created successfully',
+      product});
+  } catch (error) {
+    console.log('Error in creating product:', error.message)
+    res.status(500).json({ 
+      success: false,
+      message: error.message });
   }
 };

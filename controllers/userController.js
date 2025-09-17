@@ -3,12 +3,17 @@ import { User } from "../models/userModel.js";
 
 export const createUser = async (req, res) => {
   try {
-    const { name, email, phoneno, dob, address, accountDetails } = req.body;
+    const { name, email, phoneno, dob, address, isActive } = req.body;
 
     // Check if email already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ $or:[{email}, {phoneno}] });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: "Email already exists" });
+      let conflictField = existingUser.email === email ? "email" : "phoneno";
+      return res.status(400).json({
+        success: false,
+        message: `${conflictField} already exists`,
+        field: conflictField
+      });
     }
 
     // Create new user
@@ -18,7 +23,7 @@ export const createUser = async (req, res) => {
       phoneno,
       dob,
       address,
-      accountDetails,
+      isActive : isActive !== undefined ? isActive : true
     });
 
     const savedUser = await user.save();
@@ -32,7 +37,6 @@ export const createUser = async (req, res) => {
     console.error("Error creating user:", error.message);
     res.status(500).json({
       success: false,
-      message: "Server error",
       error: error.message,
     });
   }
