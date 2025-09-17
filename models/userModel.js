@@ -44,7 +44,12 @@ const userSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
-  }
+  },
+  communicationMethod: {
+      type: String,
+      enum: ["email", "phone", "both"], // restricts values
+      default: "email"
+    },
 
 }, { timestamps: true });
 

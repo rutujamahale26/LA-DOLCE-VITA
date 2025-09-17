@@ -3,7 +3,7 @@ import { User } from "../models/userModel.js";
 
 export const createUser = async (req, res) => {
   try {
-    const { name, email, phoneno, dob, address, isActive } = req.body;
+    const { name, email, phoneno, dob, address, isActive,communicationMethod } = req.body;
 
     // Check if email already exists
     const existingUser = await User.findOne({ $or:[{email}, {phoneno}] });
@@ -23,7 +23,8 @@ export const createUser = async (req, res) => {
       phoneno,
       dob,
       address,
-      isActive : isActive !== undefined ? isActive : true
+      isActive : isActive !== undefined ? isActive : true,
+      communicationMethod: communicationMethod || "email"
     });
 
     const savedUser = await user.save();
