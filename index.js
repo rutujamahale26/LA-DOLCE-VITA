@@ -7,6 +7,10 @@ import {fileURLToPath} from 'url'
 import { connectDB } from './config/db.js';
 import userRoutes from './routes/userRoute.js'
 import productRoutes from './routes/productRoutes.js'
+import tiktokEventRoutes from './routes/titokEventRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js'
+import orderRoutes from './routes/OrderRoutes.js'
+
 
 
 import dotenv from 'dotenv'
@@ -20,7 +24,7 @@ const PORT= process.env.PORT || 4000;
 // middleware
 app.use(express.json());
 app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: true }))
+app.use(express.urlencoded({ extended: true }));
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,6 +44,10 @@ app.get('/', (req, res)=>{
 // routes
 app.use('/api/user', userRoutes)
 app.use('/api/product', productRoutes)
+app.use('/api/event', tiktokEventRoutes)
+app.use('/api/payment', paymentRoutes)
+app.use('/api/order', orderRoutes)
+
 
 
 app.listen(PORT, ()=>{

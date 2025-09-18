@@ -25,20 +25,18 @@ const userSchema = new mongoose.Schema({
   },
 
   dob: {
-    type: Date,
-    required: [true, "Date of Birth is required"]
+    type: Date, //required: [true, "Date of Birth is required"]
   },
 
   address: {
-    street: { type: String, required: [true, "Street is required"] },
-    city: { type: String, required: [true, "City is required"] },
-    state: { type: String, required: [true, "State is required"] },
+    street: { type: String  }, //required: [true, "Street is required"]
+    city: { type: String},  //required: [true, "City is required"] 
+    state: { type: String}, //required: [true, "State is required"] 
     zipcode: { 
-      type: String, 
-      required: [true, "Zip code is required"],
+      type: String,  //required: [true, "Zip code is required"],
       match: [/^\d{5,6}$/, "Zip code must be 5 or 6 digits"]
     },
-    country: { type: String, required: [true, "Country is required"] }
+    country: { type: String } //, required: [true, "Country is required"]
   },
 
   isActive: {
@@ -47,7 +45,6 @@ const userSchema = new mongoose.Schema({
   },
   communicationMethod: {
       type: String,
-      enum: ["email", "phone", "both"], // restricts values
       default: "email"
     },
 
