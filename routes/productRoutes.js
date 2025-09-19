@@ -1,9 +1,10 @@
 import express from 'express';
 import upload from '../middleware/upload.js'
-import { createProduct, getProducts } from '../controllers/productController.js';
+import { createProduct, deleteProduct, getProducts } from '../controllers/productController.js';
 const router = express.Router();
 
 router.post("/add-product", upload.array("images", 5), createProduct);
 router.get('/product-list', getProducts);
+router.delete('/delete-product/:id', deleteProduct)
 
 export default router;

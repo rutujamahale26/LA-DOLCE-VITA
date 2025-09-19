@@ -97,7 +97,7 @@ export const getPayments = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Payments fetched successfully",
-      count: Payment.length,
+      count: payments.length,
       data: payments,
     });
   } catch (error) {
@@ -108,3 +108,32 @@ export const getPayments = async (req, res) => {
     });
   }
 };
+
+// delete payment
+export const deletePayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedPayment = await Payment.findByIdAndDelete(id);
+
+    if (!deletedPayment) {
+      return res.status(404).json({
+        success: false,
+        message: "Payment not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Payment deleted successfully",
+      deletedPayment,
+    });
+  } catch (error) {
+    console.error("Error deleting payment:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+

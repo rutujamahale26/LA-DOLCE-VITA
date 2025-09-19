@@ -23,6 +23,7 @@ export const createUser = async (req, res) => {
       email,
       phoneno,
       dob,
+      password,
       address,
       isActive : isActive !== undefined ? isActive : true,
       communicationMethod: communicationMethod || "email"
@@ -60,6 +61,34 @@ export const getUsers = async (req, res) => {
     res.status(500).json({
       success: false,
       error: error.message,
+    });
+  }
+};
+
+// delete user by id
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedUser = await User.findByIdAndDelete(id);
+
+    if (!deletedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "Customer not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Customer deleted successfully",
+      deletedUser,
+    });
+  } catch (error) {
+    console.error("Error deleting customer:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
     });
   }
 };

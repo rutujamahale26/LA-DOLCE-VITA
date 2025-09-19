@@ -64,3 +64,30 @@ export const getEvents = async (req, res) => {
   }
 };
 
+// Delete event by ID
+export const deleteEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedEvent = await TikTokEvent.findByIdAndDelete(id);
+
+    if (!deletedEvent) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Event deleted successfully",
+      deletedEvent,
+    });
+  } catch (error) {
+    console.error("Error deleting event:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
