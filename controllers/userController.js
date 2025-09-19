@@ -1,6 +1,6 @@
 import { User } from "../models/userModel.js";
 
-
+// create new customer
 export const createUser = async (req, res) => {
   try {
     const { name, email, phoneno, dob, address, isActive,communicationMethod } = req.body;
@@ -18,6 +18,7 @@ export const createUser = async (req, res) => {
 
     // Create new user
     const user = new User({
+      user : user._id,
       name,
       email,
       phoneno,
@@ -43,3 +44,22 @@ export const createUser = async (req, res) => {
   }
 };
 
+// Get all users
+export const getUsers = async (req, res) => {
+  try {
+    const users = await User.find(); // Fetch all users
+
+    res.status(200).json({
+      success: true,
+      message: "Users fetched successfully",
+      count: users.length,
+      data: users,
+    });
+  } catch (error) {
+    console.error("Error fetching users:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};

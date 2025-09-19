@@ -2,7 +2,7 @@
 
 import { TikTokEvent } from "../models/tiktokEventModel.js";
 
-
+// create tiktik event
 export const addEvent = async (req, res) => {
   try {
     const { EventDetails, HostInformation } = req.body;
@@ -43,3 +43,24 @@ export const addEvent = async (req, res) => {
     });
   }
 };
+
+// Get all TikTok Events
+export const getEvents = async (req, res) => {
+  try {
+    const events = await TikTokEvent.find();
+
+    res.status(200).json({
+      success: true,
+      message: "TikTok Events fetched successfully",
+      count: events.length,
+      data: events,
+    });
+  } catch (error) {
+    console.error("Error fetching TikTok Events:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+

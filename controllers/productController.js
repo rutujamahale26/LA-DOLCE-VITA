@@ -50,3 +50,23 @@ export const createProduct = async (req, res) => {
       message: error.message });
   }
 };
+
+// get product listing / get all products
+export const getProducts = async (req, res) => {
+  try {
+    const products = await Product.find();
+
+    res.status(200).json({
+      success: true,
+      message: "Products fetched successfully",
+      count: products.length,
+      data: products,
+    });
+  } catch (error) {
+    console.error("Error fetching products:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

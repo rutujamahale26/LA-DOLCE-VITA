@@ -1,6 +1,7 @@
 import { Payment } from "../models/paymentModel.js";
 import { User } from "../models/userModel.js";
 
+// create new payment
 export const createPayment = async (req, res) => {
   try {
     const {
@@ -83,6 +84,26 @@ export const createPayment = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+// payment listing /get all payments
+export const getPayments = async (req, res) => {
+  try {
+    const payments = await Payment.find();
+
+    res.status(200).json({
+      success: true,
+      message: "Payments fetched successfully",
+      count: Payment.length,
+      data: payments,
+    });
+  } catch (error) {
+    console.error("Error fetching payments:", error.message);
+    res.status(500).json({
+      success: false,
       error: error.message,
     });
   }

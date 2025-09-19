@@ -53,3 +53,24 @@ export const createOrder = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+// order listing / get all orders in db
+export const getOrders = async (req, res) => {
+  try {
+    const orders = await Order.find();
+
+    res.status(200).json({
+      success: true,
+      message: "Orders fetched successfully",
+      count: orders.length,
+      data: orders,
+    });
+  } catch (error) {
+    console.error("Error fetching orders:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
