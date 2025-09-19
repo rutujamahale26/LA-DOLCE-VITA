@@ -10,6 +10,7 @@ import productRoutes from './routes/productRoutes.js'
 import tiktokEventRoutes from './routes/titokEventRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js'
 import orderRoutes from './routes/OrderRoutes.js'
+import authRoutes from './routes/web_authRoutes.js'
 
 
 
@@ -25,6 +26,7 @@ const PORT= process.env.PORT || 4000;
 app.use(express.json());
 app.use(bodyParser.json())
 app.use(express.urlencoded({ extended: true }));
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,6 +49,7 @@ app.use('/api/product', productRoutes)
 app.use('/api/event', tiktokEventRoutes)
 app.use('/api/payment', paymentRoutes)
 app.use('/api/order', orderRoutes)
+app.use('/api/auth', authRoutes)
 
 
 

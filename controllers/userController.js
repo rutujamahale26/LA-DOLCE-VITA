@@ -92,3 +92,37 @@ export const deleteUser = async (req, res) => {
     });
   }
 };
+
+// update user
+export const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let updates = { ...req.body };
+
+    // Find and update
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      { $set: updates },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Prepare response with only updated fields
+    const responseFields = {};
+    Object.keys(updates).forEach((field) => {
+      responseFields[field] = updatedUser[field];
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      updatedFields: responseFields,
+    });
+  } catch (error) {
+    console.error("Error updating user:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

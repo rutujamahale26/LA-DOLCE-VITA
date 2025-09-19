@@ -1,6 +1,7 @@
 import { Product } from "../models/productModel.js";
 
 
+// create product 
 export const createProduct = async (req, res) => {
   try {
     const {
@@ -98,3 +99,4 @@ export const deleteProduct = async (req, res) => {
     });
   }
 };
+
