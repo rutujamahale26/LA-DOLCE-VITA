@@ -1,14 +1,15 @@
 import { User } from "../models/userModel.js";
 
+
 // create new customer
 export const createUser = async (req, res) => {
   try {
-    const { name, email, phoneno, dob, address, isActive,communicationMethod } = req.body;
+    const { customerName, email, phoneNumber, dob, address, isActive, communicationMethod, password } = req.body;
 
-    // Check if email already exists
-    const existingUser = await User.findOne({ $or:[{email}, {phoneno}] });
+    // Check if email or phone already exists
+    const existingUser = await User.findOne({ $or: [{ email }, { phoneNumber }] });
     if (existingUser) {
-      let conflictField = existingUser.email === email ? "email" : "phoneno";
+      let conflictField = existingUser.email === email ? "email" : "phoneNumber";
       return res.status(400).json({
         success: false,
         message: `${conflictField} already exists`,
@@ -18,14 +19,13 @@ export const createUser = async (req, res) => {
 
     // Create new user
     const user = new User({
-      user : user._id,
-      name,
+      customerName,
       email,
-      phoneno,
+      phoneNumber,
       dob,
-      password,
+      password, // ⚠️ you may want to hash this before saving
       address,
-      isActive : isActive !== undefined ? isActive : true,
+      isActive: isActive !== undefined ? isActive : true,
       communicationMethod: communicationMethod || "email"
     });
 
@@ -93,36 +93,54 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-// update user
+
+// ✅ Update user by ID
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    let updates = { ...req.body };
+    const updates = req.body;
 
-    // Find and update
-    const updatedUser = await User.findByIdAndUpdate(
-      id,
-      { $set: updates },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedUser) {
-      return res.status(404).json({ success: false, message: "User not found" });
+    if (!updates || Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No fields provided to update",
+      });
     }
 
-    // Prepare response with only updated fields
-    const responseFields = {};
-    Object.keys(updates).forEach((field) => {
-      responseFields[field] = updatedUser[field];
-    });
+    // 🔎 Fetch existing user
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // ✅ Merge updates into existing nested objects
+    if (updates.address) {
+      Object.assign(user.address, updates.address);
+    }
+    if (updates.customerName) user.customerName = updates.customerName;
+    if (updates.email) user.email = updates.email;
+    if (updates.phoneNumber) user.phoneNumber = updates.phoneNumber;
+    if (updates.dob) user.dob = updates.dob;
+    if (updates.password) user.password = updates.password; // ⚠️ Hash if needed
+    if (updates.isActive !== undefined) user.isActive = updates.isActive;
+    if (updates.communicationMethod) user.communicationMethod = updates.communicationMethod;
+
+    // ✅ Save with validation
+    const updatedUser = await user.save();
 
     res.status(200).json({
       success: true,
       message: "User updated successfully",
-      updatedFields: responseFields,
+      data: updatedUser,
     });
   } catch (error) {
     console.error("Error updating user:", error.message);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

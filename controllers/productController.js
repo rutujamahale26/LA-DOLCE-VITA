@@ -5,8 +5,8 @@ import { Product } from "../models/productModel.js";
 export const createProduct = async (req, res) => {
   try {
     const {
-      product_name,
-      product_id,
+      productName,
+      productID,
       price,
       tiktok_session_id,
       gender,
@@ -16,7 +16,7 @@ export const createProduct = async (req, res) => {
       category,
     } = req.body;
 
-    if (!product_name || !product_id || !price || !gender || !size) {
+    if (!productName || !productID || !price || !gender || !size) {
       return res.status(400).json({ message: "Required fields missing!" });
     }
 
@@ -28,8 +28,8 @@ export const createProduct = async (req, res) => {
     const images = req.files.map((f) => `/uploads/products/${f.filename}`);
 
     const product = await Product.create({
-      product_name,
-      product_id,
+      productName,
+      productID,
       price,
       tiktok_session_id,
       gender,
@@ -99,4 +99,52 @@ export const deleteProduct = async (req, res) => {
     });
   }
 };
+
+// ✅ Update product by ID
+export const updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    if (!updates && (!req.files || req.files.length === 0)) {
+      return res.status(400).json({
+        success: false,
+        message: "No fields provided to update",
+      });
+    }
+
+    // 🔎 Fetch existing product
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    // ✅ Merge simple fields
+    Object.assign(product, updates);
+
+    // ✅ Replace images if new files uploaded
+    if (req.files && req.files.length > 0) {
+      product.images = req.files.map((f) => `/uploads/products/${f.filename}`);
+    }
+
+    // ✅ Save with validation
+    const updatedProduct = await product.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Product updated successfully",
+      data: updatedProduct,
+    });
+  } catch (error) {
+    console.error("Error updating product:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 

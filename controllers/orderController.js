@@ -3,12 +3,12 @@ import { Order } from "../models/orderModel.js";
 // Create new order
 export const createOrder = async (req, res) => {
   try {
-    console.log("Raw body:", req.body); 
+    // console.log("Raw body:", req.body); 
 
     const {
-      name,         // ✅ fixed (was customerName)
+      customerName,         // ✅ fixed (was customerName)
       email,
-      phoneno,
+      phoneNumber,
       address,
       orderItems,
       paymentMethod,
@@ -30,9 +30,9 @@ export const createOrder = async (req, res) => {
     const orderTotal = calculatedItems.reduce((sum, item) => sum + item.total, 0);
 
     const newOrder = new Order({
-      name,          // ✅ fixed
+      customerName,          // ✅ fixed
       email,
-      phoneno,
+      phoneNumber,
       address,
       orderItems: calculatedItems,
       paymentMethod,
@@ -96,6 +96,66 @@ export const deleteOrder = async (req, res) => {
     });
   } catch (error) {
     console.error("Error deleting order:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// // ✅ Update order by ID
+export const updateOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    if (!updates || Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No fields provided to update",
+      });
+    }
+
+    // 🔎 Fetch existing order
+    const order = await Order.findById(id);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    // ✅ Merge updates into order
+    if (updates.customerName) order.customerName = updates.customerName;
+    if (updates.email) order.email = updates.email;
+    if (updates.phoneNumber) order.phoneNumber = updates.phoneNumber;
+    if (updates.address) order.address = updates.address;
+
+    // Handle order items update (recalculate totals)
+    if (updates.orderItems && updates.orderItems.length > 0) {
+      order.orderItems = updates.orderItems.map((item) => ({
+        ...item,
+        total: item.price * item.quantity,
+      }));
+      order.orderTotal = order.orderItems.reduce((sum, item) => sum + item.total, 0);
+    }
+
+    if (updates.paymentMethod) order.paymentMethod = updates.paymentMethod;
+    if (updates.paymentStatus) order.paymentStatus = updates.paymentStatus;
+
+    if (updates.shippingMethod) order.shippingMethod = updates.shippingMethod;
+    if (updates.shippingStatus) order.shippingStatus = updates.shippingStatus;
+
+    // ✅ Save with validation
+    const updatedOrder = await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Order updated successfully",
+      data: updatedOrder,
+    });
+  } catch (error) {
+    console.error("Error updating order:", error.message);
     res.status(500).json({
       success: false,
       message: error.message,

@@ -1,69 +1,69 @@
-// models/TikTokEvent.js
 import mongoose from "mongoose";
 
 const TikTokEventSchema = new mongoose.Schema(
   {
-    EventDetails: {
-      EventName: {
+    eventDetails: {
+      eventName: {
         type: String,
         required: [true, "Event name is required"],
         trim: true,
         minlength: [3, "Event name must be at least 3 characters long"],
         maxlength: [100, "Event name cannot exceed 100 characters"],
       },
-      EventDescription: {
+      eventDescription: {
         type: String,
-        required: [true, "Event description is required"],
+        message: "Event description is required",
         trim: true,
         minlength: [10, "Description should be at least 10 characters"],
         maxlength: [1000, "Description cannot exceed 1000 characters"],
       },
-      SessionID: {
+      sessionID: {
         type: String,
-        unique: true,
         trim: true,
       },
-      Status: {
-        type: Boolean,
+      status: {
+        type: String,
+        enum: ["active", "inactive"],
         default: "inactive",
       },
-      StartDateTime: {
+      startDateTime: {
         type: Date,
-        required: [true, "Start date and time is required"],
+        message: "Start date and time is required",
       },
-      EndDateTime: {
+      endDateTime: {
         type: Date,
-        required: [true, "End date and time is required"],
+        message: "End date and time is required",
       },
-      TikTokLiveEventLink: {
+      eventLink: {
         type: String,
-        required: [true, "TikTok Live Event link is required"],
+        message: "TikTok Live Event link is required",
         match: [
           /^https?:\/\/(www\.)?tiktok\.com\/.+/,
           "Please provide a valid TikTok event link",
         ],
       },
     },
-    HostInformation: {
-      HostName: {
+    hostInformation: {
+      hostName: {
         type: String,
-        required: [true, "Host name is required"],
+        required: true,
+        message: "Host name is required",
         trim: true,
         minlength: [3, "Host name must be at least 3 characters long"],
         maxlength: [100, "Host name cannot exceed 100 characters"],
       },
-      HostEmailAddress: {
+      hostEmailAddress: {
         type: String,
-        required: [true, "Host email is required"],
+        message: "Provide Host email is required",
         trim: true,
         lowercase: true,
         match: [/^\S+@\S+\.\S+$/, "Please provide a valid email address"],
       },
-      HostPhoneNumber: {
+      hostPhoneNumber: {
         type: String,
-        required: [true, "Host phone number is required"],
+        message: "Host phone number is required",
         minlength: [9, "Phone number must be at least 9 digits"],
-        maxlength: [15, "Phone number must not more than 15 digits"],
+        maxlength: [15, "Phone number must not exceed 15 digits"],
         match: [/^\d{9,15}$/, "Phone number must be between 9–15 digits"],
       },
     },

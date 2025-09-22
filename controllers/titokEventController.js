@@ -1,22 +1,21 @@
-// controllers/tikTokEventController.js
-
 import { TikTokEvent } from "../models/tiktokEventModel.js";
 
-// create tiktik event
+
+// Create TikTok event
 export const addEvent = async (req, res) => {
   try {
-    const { EventDetails, HostInformation } = req.body;
+    const { eventDetails, hostInformation } = req.body;
 
     // ✅ Required field checks
     if (
-      !EventDetails?.EventName ||
-      !EventDetails?.EventDescription ||
-      !EventDetails?.StartDateTime ||
-      !EventDetails?.EndDateTime ||
-      !EventDetails?.TikTokLiveEventLink ||
-      !HostInformation?.HostName ||
-      !HostInformation?.HostEmailAddress ||
-      !HostInformation?.HostPhoneNumber
+      !eventDetails?.eventName ||
+      !eventDetails?.eventDescription ||
+      !eventDetails?.startDateTime ||
+      !eventDetails?.endDateTime ||
+      !eventDetails?.eventLink ||
+      !hostInformation?.hostName ||
+      !hostInformation?.hostEmailAddress ||
+      !hostInformation?.hostPhoneNumber
     ) {
       return res.status(400).json({
         success: false,
@@ -24,10 +23,10 @@ export const addEvent = async (req, res) => {
       });
     }
 
-    // ✅ Create Event (schema will validate dates, link, phone, etc.)
+    // ✅ Create event
     const event = await TikTokEvent.create({
-      EventDetails,
-      HostInformation,
+      eventDetails,
+      hostInformation,
     });
 
     res.status(201).json({
@@ -36,7 +35,7 @@ export const addEvent = async (req, res) => {
       event,
     });
   } catch (error) {
-    console.log("Error in creating TikTok Event:", error.message);
+    console.error("Error in creating TikTok Event:", error.message);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -44,7 +43,7 @@ export const addEvent = async (req, res) => {
   }
 };
 
-// Get all TikTok Events
+// Get all TikTok events
 export const getEvents = async (req, res) => {
   try {
     const events = await TikTokEvent.find();
@@ -91,3 +90,91 @@ export const deleteEvent = async (req, res) => {
     });
   }
 };
+
+// update event by ID
+// export const updateEvent = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const updates = req.body;
+
+//     if (!updates || Object.keys(updates).length === 0) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "No fields provided to update",
+//       });
+//     }
+
+//     // ✅ Update and return the clean updated document
+//     const updatedEvent = await TikTokEvent.findByIdAndUpdate(
+//       id,
+//       { $set: updates },
+//       { new: true, runValidators: true }
+//     ).lean(); // convert to plain JS object (removes mongoose metadata)
+
+//     if (!updatedEvent) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Event not found",
+//       });
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Event updated successfully",
+//       data: updatedEvent, // 👈 only the final updated doc here
+//     });
+//   } catch (error) {
+//     console.error("Error updating TikTok Event:", error.message);
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+export const updateEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    if (!updates || Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No fields provided to update",
+      });
+    }
+
+    // 🔎 Fetch existing event
+    const event = await TikTokEvent.findById(id);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    // ✅ Merge updates into existing nested objects
+    if (updates.eventDetails) {
+      Object.assign(event.eventDetails, updates.eventDetails);
+    }
+    if (updates.hostInformation) {
+      Object.assign(event.hostInformation, updates.hostInformation);
+    }
+
+    // ✅ Save with validation
+    const updatedEvent = await event.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Event updated successfully",
+      data: updatedEvent,
+    });
+  } catch (error) {
+    console.error("Error updating TikTok Event:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+

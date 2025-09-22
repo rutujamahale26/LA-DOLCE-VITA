@@ -3,13 +3,13 @@ import mongoose from "mongoose";
 const paymentSchema = new mongoose.Schema(
   {
     customerDetails: {
-      name: { type: String, required: true },
+      customerName: { type: String, required: true },
       customerID: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
       email: { type: String, required: true },
-      phoneno: { type: String, required: true },
+      phoneNumber: { type: String, required: true },
     },
     orderDetails: {
-      orderID: { type: String, required: true },
+      orderID: { type: String, required: true, unique:true },
       transactionID: { type: String, required: true },
       amount: { type: Number, required: true, min: 0 },
       paymentMethod: { type: String, required: true },

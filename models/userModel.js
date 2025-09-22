@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-  name: {
+  customerName: {
     type: String,
     required: [true, "Name is required"],
     trim: true,
@@ -22,9 +22,10 @@ const userSchema = new mongoose.Schema({
   },
 
 
-  phoneno: {
+  phoneNumber: {
     type: String,
     required: [true, "Phone number is required"],
+    unique: true,
     minlength: [9, "Phone number must be at least 9 digits"],
     maxlength: [15, "Phone number must not more than 15 digits"],
     match: [/^\d{9,15}$/, "Phone number must be between 9–15 digits"]

@@ -9,9 +9,9 @@ const orderItemSchema = new mongoose.Schema({
 
 const orderSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },   // ✅ use "name"
+    customerName: { type: String, required: true },   // ✅ use "name"
     email: { type: String, required: true },
-    phoneno: { type: String, required: true }, 
+    phoneNumber: { type: String, required: true }, 
     address: { type: String, required: true }, 
 
     orderItems: [orderItemSchema],

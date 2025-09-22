@@ -5,9 +5,9 @@ import { User } from "../models/userModel.js";
 export const createPayment = async (req, res) => {
   try {
     const {
-      name,
+      customerName,
       email,
-      phoneno,
+      phoneNumber,
       orderID,
       transactionID,
       amount,
@@ -19,10 +19,10 @@ export const createPayment = async (req, res) => {
     } = req.body;
 
     // ✅ Basic validation
-    if (!name || !email || !phoneno) {
+    if (!customerName || !email || !phoneNumber) {
       return res.status(400).json({
         success: false,
-        message: "Name, email, and phone number are required",
+        message: "customerName, email, and phoneNumber are required",
       });
     }
 
@@ -32,21 +32,24 @@ export const createPayment = async (req, res) => {
 
     if (!user) {
       user = new User({
-        name: name.trim(),
+        customerName: customerName.trim(),
         email: email.toLowerCase(),
-        phoneno: phoneno.trim(),
+        phoneNumber: phoneNumber.trim(),
       });
       await user.save();
       isNewUser = true;
     }
 
-    // 2️⃣ Prepare payment data
+    // 2️⃣ Prepare customerDetails (MUST match schema exactly)
     const customerDetails = {
-      name: user.name,
-      customerID: user._id, // ✅ use User._id as reference
+      customerName: user.customerName,  // ✅ matches schema
+      customerID: user._id,
       email: user.email,
-      phoneno: user.phoneno,
+      phoneNumber: user.phoneNumber,    // ✅ matches schema
     };
+
+    // Debug log
+    // console.log("📌 CustomerDetails to save:", customerDetails);
 
     const orderDetails = {
       orderID,
@@ -80,7 +83,8 @@ export const createPayment = async (req, res) => {
       createdAt: payment.createdAt,
     });
   } catch (error) {
-    console.error("Error in createPayment:", error);
+    console.error("❌ Error in createPayment:", error);
+
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -89,11 +93,10 @@ export const createPayment = async (req, res) => {
   }
 };
 
-// payment listing /get all payments
+// Get all payments
 export const getPayments = async (req, res) => {
   try {
     const payments = await Payment.find();
-
     res.status(200).json({
       success: true,
       message: "Payments fetched successfully",
@@ -109,11 +112,10 @@ export const getPayments = async (req, res) => {
   }
 };
 
-// delete payment
+// Delete payment
 export const deletePayment = async (req, res) => {
   try {
     const { id } = req.params;
-
     const deletedPayment = await Payment.findByIdAndDelete(id);
 
     if (!deletedPayment) {
@@ -136,4 +138,3 @@ export const deletePayment = async (req, res) => {
     });
   }
 };
-
