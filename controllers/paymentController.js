@@ -191,3 +191,31 @@ export const updatePayment = async (req, res) => {
     });
   }
 };
+
+// ✅ Get single payment by ID
+export const getPaymentById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const payment = await Payment.findById(id);
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Payment not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Payment fetched successfully",
+      data: payment,
+    });
+  } catch (error) {
+    console.error("Error fetching payment:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

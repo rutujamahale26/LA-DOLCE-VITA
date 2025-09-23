@@ -23,7 +23,6 @@ const TikTokEventSchema = new mongoose.Schema(
       },
       status: {
         type: String,
-        enum: ["active", "inactive"],
         default: "inactive",
       },
       startDateTime: {

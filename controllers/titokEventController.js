@@ -6,16 +6,19 @@ export const addEvent = async (req, res) => {
   try {
     const { eventDetails, hostInformation } = req.body;
 
+    let missingFields = [];
+
+
     // ✅ Required field checks
     if (
-      !eventDetails?.eventName ||
-      !eventDetails?.eventDescription ||
-      !eventDetails?.startDateTime ||
-      !eventDetails?.endDateTime ||
-      !eventDetails?.eventLink ||
-      !hostInformation?.hostName ||
-      !hostInformation?.hostEmailAddress ||
-      !hostInformation?.hostPhoneNumber
+      !eventDetails?.eventName || '',
+      !eventDetails?.eventDescription ||'',
+      !eventDetails?.startDateTime ||'',
+      !eventDetails?.endDateTime ||'',
+      !eventDetails?.eventLink ||'',
+      !hostInformation?.hostName ||'',
+      !hostInformation?.hostEmailAddress ||'',
+      !hostInformation?.hostPhoneNumber||''
     ) {
       return res.status(400).json({
         success: false,
