@@ -138,3 +138,56 @@ export const deletePayment = async (req, res) => {
     });
   }
 };
+
+// ✅ Update Payment
+export const updatePayment = async (req, res) => {
+  try {
+    const { id } = req.params;   // Payment document ID
+    const updates = req.body;
+
+    if (!updates || Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No fields provided to update",
+      });
+    }
+
+    // 🔎 Fetch existing payment
+    const payment = await Payment.findById(id);
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Payment not found",
+      });
+    }
+
+    // ✅ Merge updates into existing nested objects
+    if (updates.customerDetails) {
+      Object.assign(payment.customerDetails, updates.customerDetails);
+    }
+    if (updates.orderDetails) {
+      Object.assign(payment.orderDetails, updates.orderDetails);
+    }
+
+    // ✅ Save with validation
+    const updatedPayment = await payment.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Payment updated successfully",
+      data: {
+        paymentId: updatedPayment._id,   // 👈 renamed for clarity
+        customerDetails: updatedPayment.customerDetails,
+        orderDetails: updatedPayment.orderDetails,
+        createdAt: updatedPayment.createdAt,
+        updatedAt: updatedPayment.updatedAt,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error updating payment:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

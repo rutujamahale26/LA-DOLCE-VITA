@@ -3,7 +3,9 @@ import bodyParser from 'body-parser'
 import fs from  'fs';
 import path from 'path'
 import {fileURLToPath} from 'url'
+import cors from 'cors'
 
+// import routes
 import { connectDB } from './config/db.js';
 import userRoutes from './routes/userRoute.js'
 import productRoutes from './routes/productRoutes.js'
@@ -11,7 +13,7 @@ import tiktokEventRoutes from './routes/titokEventRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js'
 import orderRoutes from './routes/OrderRoutes.js'
 import authRoutes from './routes/web_authRoutes.js'
-
+import adminRoutes from './routes/adminRoutes.js'
 
 
 import dotenv from 'dotenv'
@@ -21,6 +23,16 @@ dotenv.config();
 
 const app = express();
 const PORT= process.env.PORT || 4000;
+
+// ===== CORS Setup =====
+const allowedOrigin = process.env.FRONTEND_URL || '*';
+app.use(
+  cors({
+    origin: allowedOrigin,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true, // allows cookies and auth headers
+  })
+);
 
 // middleware
 app.use(express.json());
@@ -50,7 +62,7 @@ app.use('/api/event', tiktokEventRoutes)
 app.use('/api/payment', paymentRoutes)
 app.use('/api/order', orderRoutes)
 app.use('/api/auth', authRoutes)
-
+app.use('/api/admin', adminRoutes)
 
 
 app.listen(PORT, ()=>{
