@@ -25,8 +25,8 @@ const app = express();
 const PORT= process.env.PORT || 4000;
 
 const allowedOrigins = [
-    'http://localhost:5173/',
-    'https://silly-blancmange-c43ff5.netlify.app/'
+    'http://localhost:5173',
+    'https://silly-blancmange-c43ff5.netlify.app'
 ];
 
 const corsOptions = {
