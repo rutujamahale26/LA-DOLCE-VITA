@@ -162,3 +162,32 @@ export const updateOrder = async (req, res) => {
     });
   }
 };
+
+// ✅ Get single order by ID
+export const getOrderById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find order by ID
+    const order = await Order.findById(id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Order fetched successfully",
+      data: order,
+    });
+  } catch (error) {
+    console.error("Error fetching order:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

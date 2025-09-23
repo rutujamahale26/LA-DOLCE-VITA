@@ -177,4 +177,32 @@ export const updateEvent = async (req, res) => {
   }
 };
 
+// ✅ Get TikTok event by ID
+export const getEventById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find event by ID
+    const event = await TikTokEvent.findById(id);
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Event fetched successfully",
+      data: event,
+    });
+  } catch (error) {
+    console.error("Error fetching TikTok Event:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 

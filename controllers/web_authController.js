@@ -9,23 +9,23 @@ import { tokenBlacklist } from "../middleware/web_authMiddleware.js";
 // register user
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, phoneno, password, address } = req.body;
+    const { customerName, email, phoneNumber, password, address } = req.body;
 
     // 1. Check required fields
-    if (!name || !email || !phoneno || !password || !address) {
+    if (!customerName || !email || !phoneNumber || !password || !address) {
       return res.status(400).json({ message: "All required fields must be filled" });
     }
 
     // 2. Check if user already exists with same email OR phone
     const existingUser = await User.findOne({
-      $or: [{ email: email.toLowerCase() }, { phoneno }]
+      $or: [{ email: email.toLowerCase() }, { phoneNumber }]
     });
 
     if (existingUser) {
       if (existingUser.email === email.toLowerCase()) {
         return res.status(400).json({ message: "User already exists with this email" });
       }
-      if (existingUser.phoneno === phoneno) {
+      if (existingUser.phoneNumber === phoneNumber) {
         return res.status(400).json({ message: "User already exists with this phone number" });
       }
     }
@@ -36,9 +36,9 @@ export const registerUser = async (req, res) => {
 
     // 4. Create new user
     const newUser = new User({
-      name,
+      customerName,
       email: email.toLowerCase(),
-      phoneno,
+      phoneNumber,
       password: hashedPassword,
       address: {
         street: address.street || "",
@@ -57,9 +57,9 @@ export const registerUser = async (req, res) => {
       message: "User registered successfully",
       user: {
         id: newUser._id,
-        name: newUser.name,
+        customerName: newUser.customerName,
         email: newUser.email,
-        phoneno: newUser.phoneno,
+        phoneNumber: newUser.phoneNumber,
         address: newUser.address,
       },
     });
