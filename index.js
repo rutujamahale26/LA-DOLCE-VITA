@@ -24,11 +24,10 @@ dotenv.config();
 const app = express();
 const PORT= process.env.PORT || 4000;
 
-// ===== CORS Setup =====
-const allowedOrigin = process.env.FRONTEND_URL || '*';
+// ===== CORS Setup ====
 app.use(
   cors({
-    origin: allowedOrigin,
+    origin: true, 
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true, // allows cookies and auth headers
   })
