@@ -1,6 +1,6 @@
 import { Payment } from "../models/paymentModel.js";
 import { User } from "../models/userModel.js";
-
+import {Order} from '../models/orderModel.js'
 // create new payment
 export const createPayment = async (req, res) => {
   try {
@@ -48,8 +48,6 @@ export const createPayment = async (req, res) => {
       phoneNumber: user.phoneNumber,    // ✅ matches schema
     };
 
-    // Debug log
-    // console.log("📌 CustomerDetails to save:", customerDetails);
 
     const orderDetails = {
       orderID,
@@ -217,5 +215,64 @@ export const getPaymentById = async (req, res) => {
       success: false,
       message: error.message,
     });
+  }
+};
+
+// get oayment details with peosucts & user info
+export const getPaymentDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log("paymentId:", id);
+    // 1️⃣ Find the payment
+    const payment = await Payment.findById(id).lean();
+    if (!payment) {
+      return res.status(404).json({ success: false, message: "Payment not found" });
+    }
+
+    // 2️⃣ Find the related order
+    const order = await Order.findById(payment.orderDetails.orderID)
+      .populate("orderItems.productId") // get product details
+      .lean();
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found for this payment" });
+    }
+
+    // 3️⃣ Find the user
+    const user = await User.findById(order.userId).lean();
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // 4️⃣ Prepare response
+    const response = {
+      customerProfile: {
+        name: user.customerName,
+        email: user.email,
+        status: user.isActive ? "Active" : "Inactive",
+        customerID: user._id,
+      },
+      products: order.orderItems.map((item) => ({
+        productId: item.productId?._id,
+        productName: item.productId?.productName,
+        productImage: item.productId?.productImage,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      paymentDetails: {
+        transactionID: payment.orderDetails.transactionID,
+        orderID: order._id,
+        dateTime: payment.createdAt,
+        method: payment.orderDetails.paymentMethod,
+        amount: payment.orderDetails.amount,
+        paymentStatus: payment.orderDetails.paymentStatus,
+        deliveryStatus: payment.orderDetails.deliveryStatus,
+      },
+    };
+
+    res.status(200).json({ success: true, data: response });
+  } catch (error) {
+    console.error("Error in getPaymentDetails:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };

@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const productSchema = new mongoose.Schema(
   {
     productName: { type: String, required: true, trim: true },
-    productID: { type: String, required: true, unique: true },
+    productCode: { type: String, required: true, unique: true },
     price: { type: Number, required: true, min: 0 },
     tiktok_session_id: { type: String },
     gender: { type: String, required: true },

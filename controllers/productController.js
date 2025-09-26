@@ -1,12 +1,26 @@
 import { Product } from "../models/productModel.js";
+import cloudinary from "../config/cloudinary.js";
 
+// 🔹 Helper to upload buffer to Cloudinary
+const uploadToCloudinary = (fileBuffer, folder) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder },
+      (err, result) => {
+        if (err) reject(err);
+        else resolve(result.secure_url); // ✅ Save only URL in DB
+      }
+    );
+    stream.end(fileBuffer);
+  });
+};
 
-// create product 
+// ✅ Create Product
 export const createProduct = async (req, res) => {
   try {
     const {
       productName,
-      productID,
+      productCode,
       price,
       tiktok_session_id,
       gender,
@@ -16,20 +30,26 @@ export const createProduct = async (req, res) => {
       category,
     } = req.body;
 
-    if (!productName || !productID || !price || !gender || !size) {
+    if (!productName || !productCode || !price || !gender || !size) {
       return res.status(400).json({ message: "Required fields missing!" });
     }
 
-      // ✅ Image validation (at least 1 required, max 5 handled by multer)
+    // ✅ Image validation
     if (!req.files || req.files.length < 1) {
       return res.status(400).json({ message: "At least 1 image is required" });
     }
+    if (req.files.length > 5) {
+      return res.status(400).json({ message: "Max 5 images allowed" });
+    }
 
-    const images = req.files.map((f) => `/uploads/products/${f.filename}`);
+    // ✅ Upload images to Cloudinary
+    const images = await Promise.all(
+      req.files.map((file) => uploadToCloudinary(file.buffer, "products"))
+    );
 
     const product = await Product.create({
       productName,
-      productID,
+      productCode,
       price,
       tiktok_session_id,
       gender,
@@ -37,22 +57,21 @@ export const createProduct = async (req, res) => {
       size,
       stock,
       category,
-      images,
+      images, // ✅ Cloudinary URLs stored here
     });
 
     res.status(201).json({
-      success : true,
-      message:'Product created successfully',
-      product});
+      success: true,
+      message: "Product created successfully",
+      product,
+    });
   } catch (error) {
-    console.log('Error in creating product:', error.message)
-    res.status(500).json({ 
-      success: false,
-      message: error.message });
+    console.error("Error in creating product:", error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// get product listing / get all products
+// ✅ Get all Products
 export const getProducts = async (req, res) => {
   try {
     const products = await Product.find();
@@ -65,14 +84,97 @@ export const getProducts = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching products:", error.message);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// delete product by id 
+// ✅ Get single Product by ID
+export const getProductById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Product fetched successfully",
+      data: product,
+    });
+  } catch (error) {
+    console.error("Error fetching product:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ✅ Get Product by Code for frontend
+export const getProductByCode = async (req, res) => {
+  try {
+    const { code } = req.params;
+
+    const product = await Product.findOne({
+      productCode: { $regex: new RegExp(`^${code}$`, "i") },
+    });
+
+    if (!product) {
+      return res.status(404).json({ message: "❌ Product not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: product,
+    });
+  } catch (error) {
+    console.error("Error fetching product by code:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ✅ Update Product
+export const updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+    // ✅ Merge updates
+    Object.assign(product, updates);
+
+    // ✅ Replace images if new ones uploaded
+    if (req.files && req.files.length > 0) {
+      if (req.files.length > 5) {
+        return res.status(400).json({ message: "Max 5 images allowed" });
+      }
+
+      product.images = await Promise.all(
+        req.files.map((file) => uploadToCloudinary(file.buffer, "products"))
+      );
+    }
+
+    const updatedProduct = await product.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Product updated successfully",
+      data: updatedProduct,
+    });
+  } catch (error) {
+    console.error("Error updating product:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ✅ Delete Product
 export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -93,58 +195,6 @@ export const deleteProduct = async (req, res) => {
     });
   } catch (error) {
     console.error("Error deleting product:", error.message);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
-
-// ✅ Update product by ID
-export const updateProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updates = req.body;
-
-    if (!updates && (!req.files || req.files.length === 0)) {
-      return res.status(400).json({
-        success: false,
-        message: "No fields provided to update",
-      });
-    }
-
-    // 🔎 Fetch existing product
-    const product = await Product.findById(id);
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found",
-      });
-    }
-
-    // ✅ Merge simple fields
-    Object.assign(product, updates);
-
-    // ✅ Replace images if new files uploaded
-    if (req.files && req.files.length > 0) {
-      product.images = req.files.map((f) => `/uploads/products/${f.filename}`);
-    }
-
-    // ✅ Save with validation
-    const updatedProduct = await product.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Product updated successfully",
-      data: updatedProduct,
-    });
-  } catch (error) {
-    console.error("Error updating product:", error.message);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-

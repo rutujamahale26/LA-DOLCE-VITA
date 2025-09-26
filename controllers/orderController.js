@@ -1,4 +1,5 @@
 import { Order } from "../models/orderModel.js";
+import {Payment} from '../models/paymentModel.js';
 
 // Create new order
 export const createOrder = async (req, res) => {
@@ -50,7 +51,10 @@ export const createOrder = async (req, res) => {
       savedOrder
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error fetching orders:", error.message);
+    res.status(500).json({ 
+      success: false,
+      message: error.message });
   }
 };
 
@@ -191,3 +195,69 @@ export const getOrderById = async (req, res) => {
     });
   }
 };
+
+
+// for cancel order  button in user details page 
+export const cancelOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    // Find the order first
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "❌ Order not found",
+      });
+    }
+
+    // Prevent duplicate cancellation
+    if (order.status === "Cancelled") {
+      return res.status(400).json({
+        success: false,
+        message: "⚠️ Order is already cancelled",
+      });
+    }
+
+    // ✅ Update order with cancel info
+    const updatedOrder = await Order.findByIdAndUpdate(
+      orderId,
+      {
+        $set: {
+          status: "Cancelled",        // main order status
+          shippingStatus: "Cancelled", // cancel shipping too
+          paymentStatus: "Failed"      // mark payment as failed
+        }
+      },
+      { new: true }
+    );
+
+    // ✅ Update related payment if exists
+    await Payment.findOneAndUpdate(
+      { "orderDetails.orderID": orderId },
+      {
+        $set: {
+          "orderDetails.deliveryStatus": "Cancelled",
+          "orderDetails.paymentStatus": "Failed"
+        }
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "✅ Order cancelled successfully",
+      data: updatedOrder,
+    });
+  } catch (error) {
+    console.error("❌ Cancel Order Error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// create a manually orders with user id
+
+
+

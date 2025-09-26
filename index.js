@@ -14,7 +14,9 @@ import paymentRoutes from './routes/paymentRoutes.js'
 import orderRoutes from './routes/OrderRoutes.js'
 import authRoutes from './routes/web_authRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
-
+import stripePaymentRoutes from './routes/stripePaymentRoutes.js';
+import webhookRoutes from './routes/webhookRoutes.js'
+import stripeCheckoutRoutes from './routes/stripeCheckoutRoutes.js'
 
 import dotenv from 'dotenv'
 
@@ -47,21 +49,24 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+
+// Webhook FIRST (raw body required)
+app.use('/api/webhook', webhookRoutes);
+
 // middleware
 app.use(express.json());
-// app.use(bodyParser.json())
+app.use(bodyParser.json())
 app.use(express.urlencoded({ extended: true }));
 
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// const __dirname = path.dirname(__filename);
 
 
 // DB Connection
 connectDB()
 
-//Static folder for uploaded images
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 
 // default route
 app.get('/', (req, res)=>{
@@ -76,7 +81,8 @@ app.use('/api/payment', paymentRoutes)
 app.use('/api/order', orderRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/admin', adminRoutes)
-
+app.use('/api/stripe', stripePaymentRoutes)
+app.use('/api/stripe/checkout', stripeCheckoutRoutes)
 
 app.listen(PORT, ()=>{
     console.log(`Server is running on ${PORT}`)

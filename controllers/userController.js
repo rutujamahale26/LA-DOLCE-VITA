@@ -1,6 +1,7 @@
 import { User } from "../models/userModel.js";
-
-
+import {Order} from '../models/orderModel.js';
+import {Payment} from '../models/paymentModel.js'
+import mongoose  from "mongoose";
 // create new customer
 export const createUser = async (req, res) => {
   try {
@@ -173,4 +174,190 @@ export const getUserById = async (req, res) => {
     });
   }
 };
+
+
+// get user details with user order history
+export const getUserDetailsWithOrders = async (req, res) => {
+  try {
+    const {userId } = req.params;
+
+    const user = await User.findById(userId).lean();
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const orders = await Order.find({ userId })
+      .populate("userId")
+      .populate("orderItems.productId")
+      .lean();
+
+    const ordersWithPayments = await Promise.all(
+      orders.map(async (order) => {
+        const payment = await Payment.findOne({
+          "orderDetails.orderID": order._id,
+        }).lean();
+
+        return {
+          ...order,
+          payment: payment
+            ? {
+                status: payment.orderDetails.paymentStatus,
+                deliveryStatus: payment.orderDetails.deliveryStatus,
+                transactionID: payment.orderDetails.transactionID,
+                method: payment.orderDetails.paymentMethod,
+                amount: payment.orderDetails.amount,
+              }
+            : {
+                status: "Pending",
+                deliveryStatus: "Pending",
+              },
+        };
+      })
+    );
+
+    const totalOrders = orders.length;
+    const totalSpend = orders.reduce((acc, order) => acc + order.orderTotal, 0);
+    const avgOrderValue = totalOrders > 0 ? totalSpend / totalOrders : 0;
+
+    const response = {
+      customerProfile: {
+        name: user.customerName,
+        email: user.email,
+        status: user.isActive ? "Active" : "Inactive",
+        customerID: user._id,
+        avgOrderValue: avgOrderValue.toFixed(2),
+        totalSpend: totalSpend.toFixed(2),
+        totalOrders,
+        preferences: {
+          emailMarketing: user.communicationMethod === "email",
+          smsMarketing: user.communicationMethod === "sms",
+        },
+        dateJoined: user.createdAt,
+        lastLogin: user.updatedAt,
+      },
+      orderHistory: ordersWithPayments,
+    };
+
+    res.status(200).json({ success: true, data: response });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Update Address in user detail page
+export const updateCustomerAddress = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { street, city, state, zipcode, country } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { address: { street, city, state, zipcode, country } },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Address updated successfully",
+      address: user.address,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+// block the customer or not in user detail page
+export const toggleBlockCustomer = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { block } = req.body; // true = block, false = unblock
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { isActive: !block }, // if block=true → isActive=false
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: block ? "Customer blocked successfully" : "Customer unblocked successfully",
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Search User by email | phoneNumber | id | search param
+export const searchUser = async (req, res) => {
+  try {
+    const { email, phoneNumber, id } = req.query;
+
+    // If no search parameter is provided
+    if (!email && !phoneNumber && !id) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide email, phoneNumber, or id to search",
+      });
+    }
+
+    let query = {};
+    let searchType = "";
+
+    if (email) {
+      query = { email: email.toLowerCase() };
+      searchType = "email";
+    } else if (phoneNumber) {
+      query = { phoneNumber };
+      searchType = "phoneNumber";
+    } else if (id) {
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          success: false,
+          message: "⚠️ Invalid ID format",
+        });
+      }
+      query = { _id: id };
+      searchType = "id";
+    }
+
+    const user = await User.findOne(query);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message:
+          searchType === "email"
+            ? " User not found by email"
+            : searchType === "phoneNumber"
+            ? " User not found by phone number"
+            : " User not found by ID",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    console.error("Error searching user:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+
 

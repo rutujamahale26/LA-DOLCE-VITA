@@ -3,18 +3,18 @@ import mongoose from "mongoose";
 const paymentSchema = new mongoose.Schema(
   {
     customerDetails: {
-      customerName: { type: String, required: true },
+      customerName: { type: String },
       customerID: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-      email: { type: String, required: true },
-      phoneNumber: { type: String, required: true },
+      email: { type: String },
+      phoneNumber: { type: String},
     },
     orderDetails: {
-      orderID: { type: String, required: true, unique:true },
+      orderID: { type: mongoose.Schema.Types.ObjectId, ref: "Order"}, 
       transactionID: { type: String, required: true },
       amount: { type: Number, required: true, min: 0 },
       paymentMethod: { type: String, required: true },
-      paymentStatus: { type: String, default: "Pending" },
-      deliveryStatus: { type: String, default: "Pending" },
+      paymentStatus: { type: String },
+      deliveryStatus: { type: String },
       date: { type: Date, default: Date.now },
       notes: { type: String, maxlength: 1000 },
     },
