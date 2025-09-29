@@ -17,6 +17,7 @@ import adminRoutes from './routes/adminRoutes.js'
 import stripePaymentRoutes from './routes/stripePaymentRoutes.js';
 import webhookRoutes from './routes/webhookRoutes.js'
 import stripeCheckoutRoutes from './routes/stripeCheckoutRoutes.js'
+import cartRoutes from './routes/cartRoutes.js'
 
 import dotenv from 'dotenv'
 
@@ -83,6 +84,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/stripe', stripePaymentRoutes)
 app.use('/api/stripe/checkout', stripeCheckoutRoutes)
+app.use('/api/cart', cartRoutes)
 
 app.listen(PORT, ()=>{
     console.log(`Server is running on ${PORT}`)

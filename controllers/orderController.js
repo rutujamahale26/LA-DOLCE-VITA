@@ -1,60 +1,70 @@
+import { Cart } from "../models/addToCartProductModel.js";
 import { Order } from "../models/orderModel.js";
 import {Payment} from '../models/paymentModel.js';
 
 // Create new order
 export const createOrder = async (req, res) => {
   try {
-    // console.log("Raw body:", req.body); 
+    const userId = req.user.id;
+    const { paymentMethod, shippingMethod } = req.body;
 
-    const {
-      customerName,         // ✅ fixed (was customerName)
-      email,
-      phoneNumber,
-      address,
-      orderItems,
-      paymentMethod,
-      paymentStatus,
-      shippingMethod,
-      shippingStatus,
-    } = req.body;
+    // 1️⃣ Get cart
+    const cart = await Cart.findOne({ user: userId }).populate("items.product");
+    if (!cart || cart.items.length === 0)
+      return res.status(400).json({ success: false, message: "Cart is empty" });
 
-    if (!orderItems || orderItems.length === 0) {
-      return res.status(400).json({ message: "Order items are required" });
+    // 2️⃣ Validate stock and update products
+    for (let item of cart.items) {
+      const product = await Product.findById(item.product._id);
+      if (item.quantity > product.stock) {
+        return res.status(400).json({ 
+          success: false, 
+          message: `Only ${product.stock} items available for ${product.productName}` 
+        });
+      }
+      product.stock -= item.quantity;
+      await product.save();
     }
 
-    // calculate totals
-    const calculatedItems = orderItems.map((item) => ({
-      ...item,
-      total: item.price * item.quantity,
+    // 3️⃣ Create order from cart
+    const orderItems = cart.items.map(i => ({
+      product: i.product._id,
+      productName: i.product.productName,
+      price: i.product.price,
+      quantity: i.quantity,
+      total: i.quantity * i.product.price
     }));
 
-    const orderTotal = calculatedItems.reduce((sum, item) => sum + item.total, 0);
+    const orderTotal = orderItems.reduce((sum, i) => sum + i.total, 0);
 
     const newOrder = new Order({
-      customerName,          // ✅ fixed
-      email,
-      phoneNumber,
-      address,
-      orderItems: calculatedItems,
-      paymentMethod,
-      paymentStatus: paymentStatus || "Pending",
-      shippingMethod,
-      shippingStatus: shippingStatus || "Pending",
+      user: userId,
+      orderItems,
       orderTotal,
+      paymentMethod,
+      paymentStatus: "Pending",
+      shippingMethod,
+      shippingStatus: "Pending",
     });
 
     const savedOrder = await newOrder.save();
 
+    // 4️⃣ Clear cart
+    cart.items = [];
+    cart.totalPrice = 0;
+    await cart.save();
+
     res.status(201).json({
       success: true,
-      message: "Order created successfully",
-      savedOrder
+      message: "Order placed successfully",
+      order: savedOrder
     });
   } catch (error) {
-    console.error("Error fetching orders:", error.message);
-    res.status(500).json({ 
+    console.error("Create order error:", error.message);
+    res.status(500).json({
       success: false,
-      message: error.message });
+      message: error.message
+    });
   }
 };
 
