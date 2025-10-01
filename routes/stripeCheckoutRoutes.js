@@ -1,8 +1,11 @@
 import express from "express";
-import { createCheckoutSession } from "../controllers/stripeCheckoutController.js";
+import { createCheckout,  stripeWebhook } from "../controllers/stripeCheckoutController.js";
 
 const router = express.Router();
 
-router.post("/checkout-session", createCheckoutSession);
+router.post("/checkout",createCheckout);
+
+router.post("/webhook", stripeWebhook);
+
 
 export default router;

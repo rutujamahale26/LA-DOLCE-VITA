@@ -11,10 +11,10 @@ const orderItemSchema = new mongoose.Schema({
 const orderSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    customerName: { type: String, required: true },   // ✅ use "name"
-    email: { type: String, required: true },
-    phoneNumber: { type: String, required: true }, 
-    address: { type: String, required: true }, 
+    customerName: { type: String },   // ✅ use "name"
+    email: { type: String},
+    phoneNumber: { type: String }, 
+    address: { type: String}, 
 
     orderItems: [orderItemSchema],
 

@@ -4,7 +4,7 @@ const paymentSchema = new mongoose.Schema(
   {
     customerDetails: {
       customerName: { type: String },
-      customerID: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+      customerID: { type: mongoose.Schema.Types.ObjectId, ref: "User"},
       email: { type: String },
       phoneNumber: { type: String},
     },

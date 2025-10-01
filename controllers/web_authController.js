@@ -1,9 +1,9 @@
 import bcrypt from "bcryptjs";
 import { User } from "../models/userModel.js";
 import { OTP } from "../models/web_otpModel.js";
-import { sendEmailOTP } from "../utils/sendEmail.js";
+import { sendEmailOTP, sendWelcomeEmail } from "../utils/sendEmail.js";
 import { sendSMSOTP } from "../utils/sendSMS.js";
-import jwt from 'jsonwebtoken'
+import jwt from "jsonwebtoken";
 import { tokenBlacklist } from "../middleware/web_authMiddleware.js";
 
 // register user
@@ -13,20 +13,26 @@ export const registerUser = async (req, res) => {
 
     // 1. Check required fields
     if (!customerName || !email || !phoneNumber || !password || !address) {
-      return res.status(400).json({ message: "All required fields must be filled" });
+      return res
+        .status(400)
+        .json({ message: "All required fields must be filled" });
     }
 
     // 2. Check if user already exists with same email OR phone
     const existingUser = await User.findOne({
-      $or: [{ email: email.toLowerCase() }, { phoneNumber }]
+      $or: [{ email: email.toLowerCase() }, { phoneNumber }],
     });
 
     if (existingUser) {
       if (existingUser.email === email.toLowerCase()) {
-        return res.status(400).json({ message: "User already exists with this email" });
+        return res
+          .status(400)
+          .json({ message: "User already exists with this email" });
       }
       if (existingUser.phoneNumber === phoneNumber) {
-        return res.status(400).json({ message: "User already exists with this phone number" });
+        return res
+          .status(400)
+          .json({ message: "User already exists with this phone number" });
       }
     }
 
@@ -52,6 +58,14 @@ export const registerUser = async (req, res) => {
     // 5. Save user in DB
     await newUser.save();
 
+    // 5a. Send Welcome Email
+    try {
+      await sendWelcomeEmail(newUser.email, newUser.customerName);
+    } catch (err) {
+      console.error("Error sending welcome email:", err.message);
+      // Do not block registration even if email fails
+    }
+
     // 6. Response (don’t send password back)
     return res.status(201).json({
       message: "User registered successfully",
@@ -63,25 +77,27 @@ export const registerUser = async (req, res) => {
         address: newUser.address,
       },
     });
-
   } catch (error) {
     console.error("Register Error:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
-
 
 // 2. Request OTP
 export const requestOTP = async (req, res) => {
   try {
-    const { email, phoneno } = req.body;
+    const { email, phoneNumber } = req.body;
 
-    if (!email && !phoneno) {
-      return res.status(400).json({ message: "Provide either email or phone number" });
+    if (!email && !phoneNumber) {
+      return res
+        .status(400)
+        .json({ message: "Provide either email or phone number" });
     }
 
     // Find user
-    const user = await User.findOne(email ? { email } : { phoneno });
+    const user = await User.findOne(email ? { email } : { phoneNumber });
     if (!user) return res.status(404).json({ message: "User not found" });
 
     // Generate OTP
@@ -100,7 +116,7 @@ export const requestOTP = async (req, res) => {
     if (email) {
       await sendEmailOTP(email, otp);
     } else {
-      await sendSMSOTP(phoneno, otp);
+      await sendSMSOTP(phoneNumber, otp);
     }
 
     res.status(200).json({ message: "OTP sent successfully" });
@@ -116,14 +132,16 @@ export const verifyOTP = async (req, res) => {
     console.log("Incoming verify-otp body:", req.body);
 
     if (!req.body || Object.keys(req.body).length === 0) {
-      return res.status(400).json({ message: "Request body is missing or empty" });
+      return res
+        .status(400)
+        .json({ message: "Request body is missing or empty" });
     }
 
-    const { email, phoneno, otp } = req.body;
+    const { email, phoneNumber, otp } = req.body;
     if (!otp) return res.status(400).json({ message: "OTP is required" });
 
     // Find user
-    const user = await User.findOne(email ? { email } : { phoneno });
+    const user = await User.findOne(email ? { email } : { phoneNumber });
     if (!user) return res.status(404).json({ message: "User not found" });
 
     // Find OTP record
@@ -140,23 +158,26 @@ export const verifyOTP = async (req, res) => {
     await OTP.deleteOne({ _id: otpRecord._id });
 
     // Generate JWT token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
     return res.status(200).json({
       message: "OTP verified successfully",
-      token,  // ✅ token included
+      token, // ✅ token included
       user: {
         id: user._id,
         email: user.email,
-        phoneno: user.phoneno,
+        phoneNumber: user.phoneNumber,
       },
     });
   } catch (error) {
     console.error("Verify OTP Error:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
-
 
 // logout controller
 export const logoutUser = async (req, res) => {
@@ -174,7 +195,8 @@ export const logoutUser = async (req, res) => {
     return res.status(200).json({ message: "User logged out successfully" });
   } catch (error) {
     console.error("Logout Error:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
-

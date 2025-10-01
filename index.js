@@ -14,10 +14,8 @@ import paymentRoutes from './routes/paymentRoutes.js'
 import orderRoutes from './routes/OrderRoutes.js'
 import authRoutes from './routes/web_authRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
-import stripePaymentRoutes from './routes/stripePaymentRoutes.js';
-import webhookRoutes from './routes/webhookRoutes.js'
-import stripeCheckoutRoutes from './routes/stripeCheckoutRoutes.js'
 import cartRoutes from './routes/cartRoutes.js'
+import stripeCheckoutRoutes from './routes/stripeCheckoutRoutes.js'
 
 import dotenv from 'dotenv'
 
@@ -50,9 +48,8 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-
-// Webhook FIRST (raw body required)
-app.use('/api/webhook', webhookRoutes);
+// ✅ RAW BODY for Stripe Webhook ONLY
+app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
 
 // middleware
 app.use(express.json());
@@ -82,9 +79,8 @@ app.use('/api/payment', paymentRoutes)
 app.use('/api/order', orderRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/admin', adminRoutes)
-app.use('/api/stripe', stripePaymentRoutes)
-app.use('/api/stripe/checkout', stripeCheckoutRoutes)
 app.use('/api/cart', cartRoutes)
+app.use('/api/stripe', stripeCheckoutRoutes)
 
 app.listen(PORT, ()=>{
     console.log(`Server is running on ${PORT}`)
